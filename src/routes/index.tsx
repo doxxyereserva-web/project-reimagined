@@ -626,6 +626,30 @@ function Page() {
                   desc: "Image-to-project: força a IA a analisar profundamente cada referência (estrutura, costuras, materiais, detalhes) por no mínimo 25s antes de gerar. Pode demorar mais para um resultado superior.",
                   icon: ScanSearch,
                 },
+                {
+                  id: "chroma" as const,
+                  name: "CHROMA · Chroma-key alpha",
+                  desc: "Pede tudo que é transparente pintado em magenta #FF00FF e remove no navegador, gerando alpha real. Também mata fundo branco e xadrez falso.",
+                  icon: Eye,
+                },
+                {
+                  id: "limb" as const,
+                  name: "LIMB · Trava de geometria",
+                  desc: "Corrige o defeito nº1: mangas quebradas, punho/buraco da mão, ombro, bainhas e painéis de perna alinhados nas seis faces de cada membro.",
+                  icon: Ruler,
+                },
+                {
+                  id: "learn" as const,
+                  name: "LEARN · Memória de aprendizado",
+                  desc: `Injeta as correções que você marcou nas gerações anteriores (${learned.length} regra${learned.length === 1 ? "" : "s"} aprendida${learned.length === 1 ? "" : "s"}).`,
+                  icon: Brain,
+                },
+                {
+                  id: "catalog" as const,
+                  name: "CATALOG · Padrão Roblox",
+                  desc: "Libera a busca de referências reais no catálogo do Roblox e ensina a IA a seguir o padrão de produção da plataforma.",
+                  icon: Search,
+                },
               ]).map((f) => {
                 const Icon = f.icon;
                 const active = flags[f.id];
