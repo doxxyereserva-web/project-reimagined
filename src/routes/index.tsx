@@ -711,6 +711,72 @@ function Page() {
             </p>
           </div>
 
+          {/* Catalog reference search */}
+          {flags.catalog && (
+            <div className="rounded-2xl border border-border bg-card p-5">
+              <div className="flex items-center gap-2">
+                <Search className="h-4 w-4 text-primary" />
+                <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                  Buscar referências no catálogo Roblox
+                </label>
+              </div>
+              <p className="mt-2 text-[11px] text-muted-foreground leading-snug">
+                Busca {type === "shirt" ? "camisas" : "calças"} clássicas reais e usa as
+                thumbnails como referência de padrão de produção.
+              </p>
+              <div className="mt-3 flex gap-2">
+                <Input
+                  value={catalogQuery}
+                  onChange={(e) => setCatalogQuery(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      void searchCatalog();
+                    }
+                  }}
+                  placeholder="Ex: bomber jacket, cargo pants, y2k hoodie"
+                  className="h-11 bg-input/50 border-border text-sm"
+                />
+                <Button
+                  onClick={searchCatalog}
+                  disabled={catalogLoading || !catalogQuery.trim()}
+                  variant="outline"
+                  className="h-11 px-4 shrink-0"
+                >
+                  {catalogLoading ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Search className="h-4 w-4" />
+                  )}
+                </Button>
+              </div>
+
+              {catalogItems.length > 0 && (
+                <div className="mt-4 grid grid-cols-4 gap-2">
+                  {catalogItems.map((item) => (
+                    <button
+                      key={item.id}
+                      onClick={() => addCatalogRef(item)}
+                      title={`${item.name}${item.creator ? ` · ${item.creator}` : ""}`}
+                      className="group relative aspect-square rounded-lg overflow-hidden border border-border hover:border-primary transition-colors"
+                    >
+                      <img
+                        src={item.thumbnail}
+                        alt={item.name}
+                        className="h-full w-full object-cover"
+                      />
+                      <span className="absolute inset-0 grid place-items-center bg-background/70 opacity-0 group-hover:opacity-100 transition text-[10px] font-semibold">
+                        Usar
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
+
+
           {/* References */}
           <div className="rounded-2xl border border-border bg-card p-5">
             <div className="flex items-center justify-between gap-3">
