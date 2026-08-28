@@ -346,6 +346,7 @@ function Page() {
           references: refs.map((r) => r.url),
           model,
           flags,
+          learned: flags.learn ? learnedRuleStrings(learned) : [],
           inpaint: {
             region: inpaintRegion,
             baseImage: baseDataUrl,
@@ -361,7 +362,10 @@ function Page() {
         if (res.status === 402) throw new Error("Créditos de IA esgotados. Adicione créditos no workspace.");
         throw new Error(parsed.error || raw.slice(0, 200) || `Erro ${res.status}`);
       }
-      const patchBlob = await normalizeTo585x559(parsed.b64);
+      const { blob: patchBlob, transparentPct } = await normalizeTo585x559(
+        parsed.b64,
+        alphaOpts,
+      );
       const patchUrl = URL.createObjectURL(patchBlob);
       const composed = await compositeRegion(
         baseDataUrl,
@@ -373,8 +377,11 @@ function Page() {
       const url = URL.createObjectURL(composed);
       setResultBlob(composed);
       setResultUrl(url);
+      setFeedbackSent([]);
       toast.success(`${REGION_LABEL[inpaintRegion]} repintado`, {
-        description: "Demais cells preservados a partir do resultado anterior.",
+        description: `Demais cells preservados${
+          alphaOpts ? ` · ${transparentPct.toFixed(1)}% transparente no patch` : ""
+        }.`,
       });
     } catch (e) {
       const msg = e instanceof Error ? e.message : "Falha ao repintar.";
