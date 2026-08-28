@@ -685,7 +685,8 @@ function Page() {
               })}
             </div>
             <p className="mt-3 text-[11px] text-muted-foreground">
-              Ativar os três aumenta a qualidade mas pode adicionar segundos extras por geração.
+              Cada modo ativo é uma regra rígida enviada ao modelo — mais qualidade, alguns
+              segundos extras por geração.
             </p>
           </div>
 
