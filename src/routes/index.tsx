@@ -988,6 +988,58 @@ function Page() {
               </Button>
             </div>
           )}
+
+          {/* Post-generation feedback → learning memory */}
+          {(resultUrl || learned.length > 0) && (
+            <div className="rounded-2xl border border-border bg-card p-5 space-y-3">
+              <div className="flex items-center justify-between gap-2">
+                <div className="flex items-center gap-2">
+                  <Brain className="h-4 w-4 text-primary" />
+                  <h3 className="text-sm font-semibold">LEARN · O que ficou errado?</h3>
+                </div>
+                <span className="text-[10px] px-1.5 py-0.5 rounded-full border border-border bg-card text-muted-foreground">
+                  {learned.length} regra{learned.length === 1 ? "" : "s"}
+                </span>
+              </div>
+              <p className="text-[11px] text-muted-foreground leading-snug">
+                Marque os defeitos deste resultado. Cada marcação vira uma regra rígida enviada
+                nas próximas gerações{flags.learn ? "" : " (ative o modo LEARN para aplicá-las)"}.
+              </p>
+              {resultUrl && (
+                <div className="flex flex-wrap gap-2">
+                  {ISSUES.map((issue) => {
+                    const sent = feedbackSent.includes(issue.id);
+                    return (
+                      <button
+                        key={issue.id}
+                        onClick={() => toggleFeedback(issue.id)}
+                        disabled={sent}
+                        className={cn(
+                          "text-[11px] font-medium px-2.5 py-1.5 rounded-full border transition-all",
+                          sent
+                            ? "border-primary bg-primary/20 text-foreground"
+                            : "border-border text-muted-foreground hover:border-primary/60 hover:bg-secondary/40",
+                        )}
+                      >
+                        {sent ? "✓ " : ""}
+                        {issue.label}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+              {learned.length > 0 && (
+                <Button
+                  onClick={wipeMemory}
+                  variant="outline"
+                  className="w-full h-10 text-xs font-semibold"
+                >
+                  <Trash2 className="h-3.5 w-3.5 mr-2" />
+                  Limpar memória aprendida
+                </Button>
+              )}
+            </div>
+          )}
         </section>
       </main>
     </div>
