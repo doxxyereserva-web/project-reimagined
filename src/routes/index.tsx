@@ -392,6 +392,60 @@ function Page() {
     }
   };
 
+  const searchCatalog = async () => {
+    const keyword = catalogQuery.trim();
+    if (!keyword || catalogLoading) return;
+    setCatalogLoading(true);
+    try {
+      const res = await fetch("/api/catalog-search", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ keyword, type, limit: 8 }),
+      });
+      const json = (await res.json()) as {
+        items?: { id: number; name: string; creator?: string; thumbnail?: string }[];
+        error?: string;
+      };
+      setCatalogItems(json.items ?? []);
+      if (json.error) toast.error("Catálogo Roblox", { description: json.error });
+      else if (!json.items?.length)
+        toast.info("Nenhum item encontrado para essa busca.");
+    } catch {
+      toast.error("Falha ao buscar no catálogo do Roblox.");
+    } finally {
+      setCatalogLoading(false);
+    }
+  };
+
+  const addCatalogRef = (item: { name: string; thumbnail?: string }) => {
+    if (!item.thumbnail) return;
+    if (refs.length >= MAX_REFS) {
+      toast.error(`Máximo de ${MAX_REFS} referências.`);
+      return;
+    }
+    setRefs((prev) => [...prev, { name: item.name, url: item.thumbnail! }].slice(0, MAX_REFS));
+    toast.success("Referência adicionada", { description: item.name });
+  };
+
+  const toggleFeedback = (id: IssueId) => {
+    if (feedbackSent.includes(id)) return;
+    const next = recordIssues([id]);
+    setLearned(next);
+    setFeedbackSent((prev) => [...prev, id]);
+    toast.success("Aprendido", {
+      description: "Essa correção será aplicada nas próximas gerações.",
+    });
+  };
+
+  const wipeMemory = () => {
+    clearLearned();
+    setLearned([]);
+    setFeedbackSent([]);
+    toast.success("Memória aprendida limpa.");
+  };
+
+
+
   const download = async () => {
     if (!resultBlob || downloading) return;
     setDownloading(true);
