@@ -296,8 +296,8 @@ function Page() {
           references: refs.map((r) => r.url),
           model,
           flags,
+          learned: flags.learn ? learnedRuleStrings(learned) : [],
         }),
-
       });
       const raw = await res.text();
       let parsed: { b64?: string; error?: string } = {};
@@ -307,12 +307,15 @@ function Page() {
         if (res.status === 402) throw new Error("Créditos de IA esgotados. Adicione créditos no workspace.");
         throw new Error(parsed.error || raw.slice(0, 200) || `Erro ${res.status}`);
       }
-      const blob = await normalizeTo585x559(parsed.b64);
+      const { blob, transparentPct } = await normalizeTo585x559(parsed.b64, alphaOpts);
       const url = URL.createObjectURL(blob);
       setResultBlob(blob);
       setResultUrl(url);
+      setFeedbackSent([]);
       toast.success("Outfit pronto!", {
-        description: `${(blob.size / 1024).toFixed(0)} KB · 585×559 PNG · upload-ready`,
+        description: `${(blob.size / 1024).toFixed(0)} KB · 585×559 PNG · ${
+          alphaOpts ? `${transparentPct.toFixed(1)}% transparente` : "sem pós-alpha"
+        } · upload-ready`,
       });
     } catch (e) {
       const msg = e instanceof Error ? e.message : "Falha ao gerar a roupa.";
