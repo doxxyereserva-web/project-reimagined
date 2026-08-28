@@ -208,14 +208,13 @@ function Page() {
   };
   const [prompt, setPrompt] = useState("");
   const [refs, setRefs] = useState<{ name: string; url: string }[]>([]);
-  const [flags, setFlags] = useState<Flags>(() => {
-    if (typeof window === "undefined") return { nac: true, rpb: true, rmtpc: true, dra: true };
+  const [flags, setFlags] = useState<Flags>(DEFAULT_FLAGS);
+  useEffect(() => {
     try {
       const raw = window.localStorage.getItem(FLAGS_STORAGE_KEY);
-      if (raw) return { nac: true, rpb: true, rmtpc: true, dra: true, ...JSON.parse(raw) };
+      if (raw) setFlags({ ...DEFAULT_FLAGS, ...JSON.parse(raw) });
     } catch { /* ignore */ }
-    return { nac: true, rpb: true, rmtpc: true, dra: true };
-  });
+  }, []);
   const toggleFlag = (k: keyof Flags) => {
     setFlags((prev) => {
       const next = { ...prev, [k]: !prev[k] };
@@ -223,6 +222,29 @@ function Page() {
       return next;
     });
   };
+
+  // Alpha pipeline options derived from the active pro modes.
+  const alphaOpts: AlphaOptions | null = useMemo(() => {
+    if (!flags.chroma && !flags.rpb) return null;
+    return {
+      ...DEFAULT_ALPHA,
+      chroma: flags.chroma,
+      killCheckerboard: true,
+      killWhiteBackground: true,
+    };
+  }, [flags.chroma, flags.rpb]);
+
+  // Learned corrective rules (self-improvement memory).
+  const [learned, setLearned] = useState<LearnedRule[]>([]);
+  useEffect(() => setLearned(loadLearned()), []);
+  const [feedbackSent, setFeedbackSent] = useState<IssueId[]>([]);
+
+  // Roblox catalog reference search.
+  const [catalogQuery, setCatalogQuery] = useState("");
+  const [catalogLoading, setCatalogLoading] = useState(false);
+  const [catalogItems, setCatalogItems] = useState<
+    { id: number; name: string; creator?: string; thumbnail?: string }[]
+  >([]);
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
