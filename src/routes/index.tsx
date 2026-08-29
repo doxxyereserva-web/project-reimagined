@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
-import { Loader2, Upload, X, Download, Shirt, Wand2, Copy, Check, Zap, Sparkles, ShieldCheck, Layers, Eye, ScanSearch, Paintbrush, Search, Brain, Ruler, Trash2 } from "lucide-react";
+import { Loader2, Upload, X, Download, Shirt, Wand2, Copy, Check, Zap, Sparkles, ShieldCheck, Layers, Eye, ScanSearch, Paintbrush, Search, Brain, Ruler, Trash2, Link2 } from "lucide-react";
 import { toast } from "sonner";
 import { processAlpha, DEFAULT_ALPHA, type AlphaOptions } from "@/lib/alpha-engine";
 import { ISSUES, loadLearned, recordIssues, clearLearned, learnedRuleStrings, type IssueId, type LearnedRule } from "@/lib/learning";
@@ -242,6 +242,8 @@ function Page() {
   // Roblox catalog reference search.
   const [catalogQuery, setCatalogQuery] = useState("");
   const [catalogLoading, setCatalogLoading] = useState(false);
+  const [itemInput, setItemInput] = useState("");
+  const [itemLoading, setItemLoading] = useState(false);
   const [catalogItems, setCatalogItems] = useState<
     { id: number; name: string; creator?: string; thumbnail?: string }[]
   >([]);
