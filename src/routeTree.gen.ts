@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ApiGenerateClothingRouteImport } from './routes/api/generate-clothing'
 import { Route as ApiCatalogSearchRouteImport } from './routes/api/catalog-search'
+import { Route as ApiCatalogItemRouteImport } from './routes/api/catalog-item'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -28,33 +29,55 @@ const ApiCatalogSearchRoute = ApiCatalogSearchRouteImport.update({
   path: '/api/catalog-search',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiCatalogItemRoute = ApiCatalogItemRouteImport.update({
+  id: '/api/catalog-item',
+  path: '/api/catalog-item',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/api/catalog-item': typeof ApiCatalogItemRoute
   '/api/catalog-search': typeof ApiCatalogSearchRoute
   '/api/generate-clothing': typeof ApiGenerateClothingRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/api/catalog-item': typeof ApiCatalogItemRoute
   '/api/catalog-search': typeof ApiCatalogSearchRoute
   '/api/generate-clothing': typeof ApiGenerateClothingRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/api/catalog-item': typeof ApiCatalogItemRoute
   '/api/catalog-search': typeof ApiCatalogSearchRoute
   '/api/generate-clothing': typeof ApiGenerateClothingRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/api/catalog-search' | '/api/generate-clothing'
+  fullPaths:
+    | '/'
+    | '/api/catalog-item'
+    | '/api/catalog-search'
+    | '/api/generate-clothing'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/api/catalog-search' | '/api/generate-clothing'
-  id: '__root__' | '/' | '/api/catalog-search' | '/api/generate-clothing'
+  to:
+    | '/'
+    | '/api/catalog-item'
+    | '/api/catalog-search'
+    | '/api/generate-clothing'
+  id:
+    | '__root__'
+    | '/'
+    | '/api/catalog-item'
+    | '/api/catalog-search'
+    | '/api/generate-clothing'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  ApiCatalogItemRoute: typeof ApiCatalogItemRoute
   ApiCatalogSearchRoute: typeof ApiCatalogSearchRoute
   ApiGenerateClothingRoute: typeof ApiGenerateClothingRoute
 }
@@ -82,11 +105,19 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiCatalogSearchRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/catalog-item': {
+      id: '/api/catalog-item'
+      path: '/api/catalog-item'
+      fullPath: '/api/catalog-item'
+      preLoaderRoute: typeof ApiCatalogItemRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  ApiCatalogItemRoute: ApiCatalogItemRoute,
   ApiCatalogSearchRoute: ApiCatalogSearchRoute,
   ApiGenerateClothingRoute: ApiGenerateClothingRoute,
 }
