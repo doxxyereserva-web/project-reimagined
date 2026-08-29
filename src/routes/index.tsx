@@ -764,6 +764,38 @@ function Page() {
                 Busca {type === "shirt" ? "camisas" : "calças"} clássicas reais e usa as
                 thumbnails como referência de padrão de produção.
               </p>
+
+              {/* Copy-by-URL: paste a catalog link or bare asset ID */}
+              <div className="mt-3 flex gap-2">
+                <div className="relative flex-1">
+                  <Link2 className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    value={itemInput}
+                    onChange={(e) => setItemInput(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        e.preventDefault();
+                        void importCatalogItem();
+                      }
+                    }}
+                    placeholder="Cole a URL do item ou o ID (ex: roblox.com/catalog/123…)"
+                    className="h-11 pl-9 bg-input/50 border-border text-sm"
+                  />
+                </div>
+                <Button
+                  onClick={importCatalogItem}
+                  disabled={itemLoading || !itemInput.trim()}
+                  variant="outline"
+                  className="h-11 px-4 shrink-0"
+                >
+                  {itemLoading ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <span className="text-xs font-semibold">Importar</span>
+                  )}
+                </Button>
+              </div>
+
               <div className="mt-3 flex gap-2">
                 <Input
                   value={catalogQuery}
