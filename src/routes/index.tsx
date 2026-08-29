@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
-import { Loader2, Upload, X, Download, Shirt, Wand2, Copy, Check, Zap, Sparkles, ShieldCheck, Layers, Eye, ScanSearch, Paintbrush, Search, Brain, Ruler, Trash2 } from "lucide-react";
+import { Loader2, Upload, X, Download, Shirt, Wand2, Copy, Check, Zap, Sparkles, ShieldCheck, Layers, Eye, ScanSearch, Paintbrush, Search, Brain, Ruler, Trash2, Link2 } from "lucide-react";
 import { toast } from "sonner";
 import { processAlpha, DEFAULT_ALPHA, type AlphaOptions } from "@/lib/alpha-engine";
 import { ISSUES, loadLearned, recordIssues, clearLearned, learnedRuleStrings, type IssueId, type LearnedRule } from "@/lib/learning";
@@ -242,6 +242,8 @@ function Page() {
   // Roblox catalog reference search.
   const [catalogQuery, setCatalogQuery] = useState("");
   const [catalogLoading, setCatalogLoading] = useState(false);
+  const [itemInput, setItemInput] = useState("");
+  const [itemLoading, setItemLoading] = useState(false);
   const [catalogItems, setCatalogItems] = useState<
     { id: number; name: string; creator?: string; thumbnail?: string }[]
   >([]);
@@ -414,6 +416,44 @@ function Page() {
       toast.error("Falha ao buscar no catálogo do Roblox.");
     } finally {
       setCatalogLoading(false);
+    }
+  };
+
+  const importCatalogItem = async () => {
+    const input = itemInput.trim();
+    if (!input || itemLoading) return;
+    if (refs.length >= MAX_REFS) {
+      toast.error(`Máximo de ${MAX_REFS} referências.`);
+      return;
+    }
+    setItemLoading(true);
+    try {
+      const res = await fetch("/api/catalog-item", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ input }),
+      });
+      const json = (await res.json()) as {
+        item?: { id: number; name: string; creator?: string; thumbnail?: string };
+        error?: string;
+      };
+      if (json.error || !json.item?.thumbnail) {
+        toast.error("Item do catálogo", {
+          description: json.error ?? "Não foi possível carregar esse item.",
+        });
+        return;
+      }
+      setRefs((prev) =>
+        [...prev, { name: json.item!.name, url: json.item!.thumbnail! }].slice(0, MAX_REFS),
+      );
+      setItemInput("");
+      toast.success("Item importado como referência", {
+        description: `${json.item.name}${json.item.creator ? ` · ${json.item.creator}` : ""}`,
+      });
+    } catch {
+      toast.error("Falha ao importar o item do catálogo.");
+    } finally {
+      setItemLoading(false);
     }
   };
 
@@ -724,6 +764,38 @@ function Page() {
                 Busca {type === "shirt" ? "camisas" : "calças"} clássicas reais e usa as
                 thumbnails como referência de padrão de produção.
               </p>
+
+              {/* Copy-by-URL: paste a catalog link or bare asset ID */}
+              <div className="mt-3 flex gap-2">
+                <div className="relative flex-1">
+                  <Link2 className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    value={itemInput}
+                    onChange={(e) => setItemInput(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        e.preventDefault();
+                        void importCatalogItem();
+                      }
+                    }}
+                    placeholder="Cole a URL do item ou o ID (ex: roblox.com/catalog/123…)"
+                    className="h-11 pl-9 bg-input/50 border-border text-sm"
+                  />
+                </div>
+                <Button
+                  onClick={importCatalogItem}
+                  disabled={itemLoading || !itemInput.trim()}
+                  variant="outline"
+                  className="h-11 px-4 shrink-0"
+                >
+                  {itemLoading ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <span className="text-xs font-semibold">Importar</span>
+                  )}
+                </Button>
+              </div>
+
               <div className="mt-3 flex gap-2">
                 <Input
                   value={catalogQuery}
