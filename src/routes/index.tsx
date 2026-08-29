@@ -244,6 +244,7 @@ function Page() {
   const [catalogLoading, setCatalogLoading] = useState(false);
   const [itemInput, setItemInput] = useState("");
   const [itemLoading, setItemLoading] = useState(false);
+  const [copyLoading, setCopyLoading] = useState(false);
   const [catalogItems, setCatalogItems] = useState<
     { id: number; name: string; creator?: string; thumbnail?: string }[]
   >([]);
@@ -454,6 +455,61 @@ function Page() {
       toast.error("Falha ao importar o item do catálogo.");
     } finally {
       setItemLoading(false);
+    }
+  };
+
+  // CTRL+C: resolve the item's real template PNG (585×559) server-side,
+  // download it locally and add it as a visual reference.
+  const copyTemplate = async () => {
+    const input = itemInput.trim();
+    if (!input || copyLoading) return;
+    setCopyLoading(true);
+    try {
+      const res = await fetch("/api/catalog-copy", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ input }),
+      });
+      const json = (await res.json()) as {
+        item?: {
+          id: number;
+          name: string;
+          creator?: string;
+          template?: string;
+          bytes?: number;
+        };
+        error?: string;
+      };
+      if (json.error || !json.item?.template) {
+        toast.error("CTRL+C · copiar template", {
+          description: json.error ?? "Não foi possível copiar esse template.",
+        });
+        return;
+      }
+      const item = json.item;
+      // Download the template PNG
+      const a = document.createElement("a");
+      a.href = item.template!;
+      a.download = `roblox-template-${item.id}.png`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      // Also queue it as a reference (best-effort, respects MAX_REFS)
+      setRefs((prev) =>
+        prev.length >= MAX_REFS
+          ? prev
+          : [...prev, { name: `CTRL+C · ${item.name}`, url: item.template! }].slice(0, MAX_REFS),
+      );
+      setItemInput("");
+      toast.success("Template copiado (CTRL+C)", {
+        description: `${item.name}${item.creator ? ` · ${item.creator}` : ""} — PNG ${
+          item.bytes ? `${(item.bytes / 1024).toFixed(0)}KB` : ""
+        } baixado e adicionado como referência.`,
+      });
+    } catch {
+      toast.error("Falha ao copiar o template do item.");
+    } finally {
+      setCopyLoading(false);
     }
   };
 
@@ -784,7 +840,7 @@ function Page() {
                 </div>
                 <Button
                   onClick={importCatalogItem}
-                  disabled={itemLoading || !itemInput.trim()}
+                  disabled={itemLoading || copyLoading || !itemInput.trim()}
                   variant="outline"
                   className="h-11 px-4 shrink-0"
                 >
@@ -792,6 +848,22 @@ function Page() {
                     <Loader2 className="h-4 w-4 animate-spin" />
                   ) : (
                     <span className="text-xs font-semibold">Importar</span>
+                  )}
+                </Button>
+                <Button
+                  onClick={copyTemplate}
+                  disabled={copyLoading || itemLoading || !itemInput.trim()}
+                  variant="outline"
+                  title="Copia o template PNG original (585×559) do item"
+                  className="h-11 px-4 shrink-0 gap-1.5"
+                >
+                  {copyLoading ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <>
+                      <Copy className="h-4 w-4" />
+                      <span className="text-xs font-semibold">CTRL+C</span>
+                    </>
                   )}
                 </Button>
               </div>
