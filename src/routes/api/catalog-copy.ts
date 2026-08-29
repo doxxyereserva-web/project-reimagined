@@ -85,34 +85,55 @@ export const Route = createFileRoute("/api/catalog-copy")({
         }
 
         // Step 1: fetch the asset manifest XML to find the template image.
+        // Try the official assetdelivery first, then a public mirror.
+        // NOTE: Roblox marks many newer catalog items as "restricted" — those
+        // return 401 for anyone without a logged-in Roblox cookie, on both
+        // hosts. In that case there is no public way to fetch the template.
         let templateImageId: number | null = null;
-        try {
-          const mRes = await fetch(
-            `https://assetdelivery.roblox.com/v1/asset?id=${assetId}`,
-            { headers: { "User-Agent": UA } },
-          );
-          if (mRes.ok) {
-            const xml = await mRes.text();
-            templateImageId = extractTemplateImageId(xml);
+        let restricted = false;
+        for (const host of [
+          "assetdelivery.roblox.com",
+          "assetdelivery.roproxy.com",
+        ]) {
+          try {
+            const mRes = await fetch(
+              `https://${host}/v1/asset?id=${assetId}`,
+              { headers: { "User-Agent": UA }, redirect: "follow" },
+            );
+            if (mRes.status === 401 || mRes.status === 403) {
+              restricted = true;
+              continue;
+            }
+            if (mRes.ok) {
+              const xml = await mRes.text();
+              templateImageId = extractTemplateImageId(xml);
+              if (templateImageId) break;
+            }
+          } catch {
+            /* try next host */
           }
-        } catch {
-          /* fall through */
         }
 
         if (!templateImageId) {
           return Response.json(
             {
-              error:
-                "Não consegui resolver o template desse item — verifique se é uma camisa/calça clássica.",
+              error: restricted
+                ? "Esse item é restrito pelo Roblox — o template original só pode ser baixado com login Roblox. Use 'Importar' para trazer a thumbnail como referência."
+                : "Não consegui resolver o template desse item — verifique se é uma camisa/calça clássica.",
             },
             { status: 200 },
           );
         }
 
         // Step 2: fetch the actual template PNG (585×559 for shirts/pants).
-        const tpl = await fetchAsDataUrl(
-          `https://assetdelivery.roblox.com/v1/asset?id=${templateImageId}`,
-        );
+        let tpl: { dataUrl: string; byteLength: number } | undefined;
+        for (const host of [
+          "assetdelivery.roblox.com",
+          "assetdelivery.roproxy.com",
+        ]) {
+          tpl = await fetchAsDataUrl(`https://${host}/v1/asset?id=${templateImageId}`);
+          if (tpl) break;
+        }
         if (!tpl) {
           return Response.json(
             { error: "Template resolvido, mas o download da imagem falhou." },
