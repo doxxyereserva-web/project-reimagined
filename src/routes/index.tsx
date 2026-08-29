@@ -419,6 +419,44 @@ function Page() {
     }
   };
 
+  const importCatalogItem = async () => {
+    const input = itemInput.trim();
+    if (!input || itemLoading) return;
+    if (refs.length >= MAX_REFS) {
+      toast.error(`Máximo de ${MAX_REFS} referências.`);
+      return;
+    }
+    setItemLoading(true);
+    try {
+      const res = await fetch("/api/catalog-item", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ input }),
+      });
+      const json = (await res.json()) as {
+        item?: { id: number; name: string; creator?: string; thumbnail?: string };
+        error?: string;
+      };
+      if (json.error || !json.item?.thumbnail) {
+        toast.error("Item do catálogo", {
+          description: json.error ?? "Não foi possível carregar esse item.",
+        });
+        return;
+      }
+      setRefs((prev) =>
+        [...prev, { name: json.item!.name, url: json.item!.thumbnail! }].slice(0, MAX_REFS),
+      );
+      setItemInput("");
+      toast.success("Item importado como referência", {
+        description: `${json.item.name}${json.item.creator ? ` · ${json.item.creator}` : ""}`,
+      });
+    } catch {
+      toast.error("Falha ao importar o item do catálogo.");
+    } finally {
+      setItemLoading(false);
+    }
+  };
+
   const addCatalogRef = (item: { name: string; thumbnail?: string }) => {
     if (!item.thumbnail) return;
     if (refs.length >= MAX_REFS) {
